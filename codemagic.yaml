@@ -1,0 +1,65 @@
+# 忆景Revive - Codemagic在线构建配置
+# 专门为华为平板优化的Flutter APK构建
+
+workflows:
+  memorypal-revive-android:
+    name: 忆景Revive APK构建
+    environment:
+      groups:
+        # 添加构建证书（可选）
+        - keystore_credentials
+    
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+    
+    scripts:
+      - name: 安装Flutter依赖
+        script: |
+          flutter pub get
+      
+      - name: 构建华为平板APK
+        script: |
+          flutter build apk --release \
+            --target-platform android-arm64 \
+            --dart-define=IS_TABLET=true \
+            --dart-define=PERFORMANCE_LEVEL=high
+    
+    artifacts:
+      - build/app/outputs/apk/**/*.apk
+    
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
+      
+      scripts:
+        - name: 上传APK到GitHub Release
+          script: |
+            # 可选：自动发布到GitHub Release
+            echo "APK构建完成，可在Artifacts中下载"
+
+# 构建环境配置
+environment:
+  flutter: stable
+  
+  # Android构建环境
+  android_sdk:
+    - "build-tools-34.0.0"
+    - "platforms-android-34"
+    - "platform-tools"
+    - "cmdline-tools-8.0"
+
+# 构建缓存配置（加速构建）
+cache:
+  cache_paths:
+    - ~/.pub-cache
+    - ~/.gradle/caches
+    - android/app/build
